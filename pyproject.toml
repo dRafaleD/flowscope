@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "flowscope"
+version = "0.1.0"
+description = "PCAP-based network traffic analysis for security learning"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "dpkt>=1.9.8",
+    "rich>=13.7.0",
+]
+
+[project.optional-dependencies]
+geoip = ["maxminddb>=2.6.0"]
+dev = ["pytest>=8.0.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[project.scripts]
+flowscope = "flowscope.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

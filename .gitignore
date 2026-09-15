@@ -1,0 +1,44 @@
+# Virtualenv / packaging
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+dist/
+build/
+*.egg
+
+# Tests / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.hypothesis/
+
+# Local captures and generated reports (regenerate with scripts/)
+*.pcap
+*.pcapng
+!samples/lab_demo.pcap
+report.json
+report.html
+samples/*.json
+samples/*.html
+
+# Secrets and GeoIP databases
+.env
+.env.*
+*.mmdb
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*~
+.cursor/
