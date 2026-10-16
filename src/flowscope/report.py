@@ -3,13 +3,25 @@ from __future__ import annotations
 import json
 from dataclasses import asdict
 from typing import Any
+import unicodedata
 
 from rich.console import Console
 from rich.table import Table
+from rich.text import Text
 
 from flowscope.models import AnalysisReport, Finding
 
 SEVERITY_RANK = {"low": 1, "medium": 2, "high": 3, "critical": 4}
+
+
+def literal(value: object) -> Text:
+    """Protocol metadata is text, never markup or terminal control traffic."""
+    text = str(value)
+    return Text("".join(
+        character.encode("unicode_escape").decode("ascii")
+        if unicodedata.category(character) in {"Cc", "Cf"} else character
+        for character in text
+    ))
 
 
 def meets_severity(finding: Finding, min_severity: str) -> bool:
@@ -31,7 +43,7 @@ def write_json(report: AnalysisReport, out_path: str) -> None:
 
 def print_console(report: AnalysisReport, min_severity: str = "low") -> None:
     console = Console()
-    console.print(f"\n[bold]Flowscope[/bold] — {report.pcap_path}")
+    console.print(Text.assemble("\n", ("Flowscope", "bold"), " — ", literal(report.pcap_path)))
     console.print(
         f"Packets: {report.packet_count} | Duration: {report.duration_seconds:.2f}s | "
         f"[bold red]Risk score: {report.risk_score}/100[/bold red]\n"
@@ -73,7 +85,7 @@ def print_console(report: AnalysisReport, min_severity: str = "low") -> None:
             tsni.add_row(
                 e.src,
                 f"{e.dst}:{e.dport}",
-                e.sni or "-",
+                literal(e.sni or "-"),
                 e.tls_version,
                 ja3,
                 ja3s,
@@ -115,7 +127,7 @@ def print_console(report: AnalysisReport, min_severity: str = "low") -> None:
     t.add_column("Packets", justify="right")
     t.add_column("Bytes", justify="right")
     for ip, pkts, byts in report.top_ips[:10]:
-        t.add_row(ip, _geo_short(ip), str(pkts), str(byts))
+        t.add_row(literal(ip), literal(_geo_short(ip)), str(pkts), str(byts))
     console.print(t)
 
     t2 = Table(title="Top TCP connections")
@@ -144,20 +156,20 @@ def print_console(report: AnalysisReport, min_severity: str = "low") -> None:
         )
         t3.add_row(
             f"[{color}]{f.severity}[/{color}]",
-            f.category,
-            f.mitre or "-",
-            f.title,
+            literal(f.category),
+            literal(f.mitre or "-"),
+            literal(f.title),
             str(f.score_delta),
-            (f.advice or "-")[:80],
+            literal((f.advice or "-")[:80]),
         )
     console.print(t3)
 
     for f in scored:
         if f.detail:
             mitre = f" [{f.mitre}]" if f.mitre else ""
-            console.print(f"  • [{f.category}]{mitre} {f.detail}")
+            console.print(literal(f"  • [{f.category}]{mitre} {f.detail}"))
             if f.advice:
-                console.print(f"    advice: {f.advice}")
+                console.print(literal(f"    advice: {f.advice}"))
 
     if info:
         t4 = Table(title="Informational")
@@ -165,5 +177,5 @@ def print_console(report: AnalysisReport, min_severity: str = "low") -> None:
         t4.add_column("Title")
         t4.add_column("MITRE")
         for f in info:
-            t4.add_row(f.category, f.title, f.mitre or "-")
+            t4.add_row(literal(f.category), literal(f.title), literal(f.mitre or "-"))
         console.print(t4)
